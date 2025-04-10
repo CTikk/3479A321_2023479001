@@ -1,6 +1,8 @@
 # application_laboratorio
 
-A new Flutter project.
+Nombre : Valentine Sierra
+Matrícula : 2023479001
+Laboratorio 3 de programación para dispositivos móviles
 
 ## Getting Started
 
