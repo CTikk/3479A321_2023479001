@@ -2,12 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:logger/logger.dart';
 import 'package:application_laboratorio/pages/home_page.dart'; // Archivo de la pag principal :)
+import 'package:provider/provider.dart';
+import 'package:application_laboratorio/provider/app_data.dart';
 
 var logger = Logger();
 
 void main() {
-  logger.i("Logger is working!");
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => AppData(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
