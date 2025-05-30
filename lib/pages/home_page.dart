@@ -2,9 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:application_laboratorio/pages/about.dart';
 import 'package:application_laboratorio/pages/list_content.dart';
+import 'package:application_laboratorio/pages/preference_page.dart';
 import 'package:application_laboratorio/provider/app_data.dart';
+import 'package:application_laboratorio/entity/activity.dart';
+import 'package:application_laboratorio/services/database_helper.dart';
+import 'package:application_laboratorio/pages/activity_page.dart';
+import 'package:intl/intl.dart';
 
 const String assetName = 'asset/icons/cara.svg';
 var logger = Logger();
@@ -14,13 +20,12 @@ class MyHomePage extends StatefulWidget {
   final String title;
 
   @override
-  State<MyHomePage> createState() {
-    logger.i("createState ejecutado");
-    return _MyHomePageState();
-  }
+  State<MyHomePage> createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  bool _resetAllowed = true;
+
   _MyHomePageState() {
     logger.i("Constructor ejecutado - mounted: \$mounted");
   }
@@ -29,6 +34,14 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
     logger.i("initState ejecutado");
+    _loadPreferences();
+  }
+
+  Future<void> _loadPreferences() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _resetAllowed = prefs.getBool('isResetEnabled') ?? true;
+    });
   }
 
   @override
@@ -85,13 +98,67 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     logger.i("build ejecutado");
-
     final appData = context.watch<AppData>();
 
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(widget.title),
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: <Widget>[
+            const DrawerHeader(
+              decoration: BoxDecoration(color: Colors.purple),
+              child: Text('Menú de Navegación'),
+            ),
+            ListTile(
+              title: const Text('Home'),
+              onTap: () {
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              title: const Text('Lista de elementos'),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ListContentPage()),
+                );
+              },
+            ),
+            ListTile(
+              title: const Text('Detalle / About'),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AboutPage()),
+                );
+              },
+            ),
+            ListTile(
+              title: const Text('Preferencias'),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const PreferencePage()),
+                ).then((_) {
+                  _loadPreferences();
+                });
+              },
+            ),
+            ListTile(
+              title: const Text('Actividades'),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ActivityPage()),
+                );
+              },
+            ),
+          ],
+        ),
       ),
       body: Center(
         child: Card(
@@ -139,7 +206,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       icon: const Icon(Icons.restart_alt_rounded),
                       color: Colors.black,
                       tooltip: 'Reiniciar',
-                      onPressed: appData.resetEnabled
+                      onPressed: _resetAllowed
                           ? () => context.read<AppData>().resetCounter()
                           : null,
                     ),

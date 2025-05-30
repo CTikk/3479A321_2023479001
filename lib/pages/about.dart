@@ -33,14 +33,6 @@ class AboutPage extends StatelessWidget {
               },
             ),
             const SizedBox(height: 20),
-            SwitchListTile(
-              title: const Text("Permitir reiniciar contador"),
-              value: appData.resetEnabled,
-              onChanged: (value) {
-                context.read<AppData>().setResetEnabled(value);
-              },
-            ),
-            const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
                 Navigator.pop(context);
