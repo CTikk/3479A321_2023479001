@@ -7,10 +7,7 @@ import 'package:application_laboratorio/pages/about.dart';
 import 'package:application_laboratorio/pages/list_content.dart';
 import 'package:application_laboratorio/pages/preference_page.dart';
 import 'package:application_laboratorio/provider/app_data.dart';
-import 'package:application_laboratorio/entity/activity.dart';
-import 'package:application_laboratorio/services/database_helper.dart';
 import 'package:application_laboratorio/pages/activity_page.dart';
-import 'package:intl/intl.dart';
 
 const String assetName = 'asset/icons/cara.svg';
 var logger = Logger();

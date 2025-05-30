@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:application_laboratorio/services/database_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -12,8 +14,12 @@ var logger = Logger();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  sqfliteFfiInit();
-  databaseFactory = databaseFactoryFfi;
+  
+  if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+    // Solo para escritorio
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  }
 
   await DatabaseHelper().initializeDatabase();
     runApp(
