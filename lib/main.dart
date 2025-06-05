@@ -36,7 +36,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: "Laboratorio 7",
+      title: "Laboratorio 8",
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.purple,
@@ -49,7 +49,7 @@ class MyApp extends StatelessWidget {
           displaySmall: GoogleFonts.pacifico(),
         ),
       ),
-      home: const MyHomePage(title: "Laboratorio 7"),
+      home: const MyHomePage(title: "Laboratorio 8"),
     );
   }
 }

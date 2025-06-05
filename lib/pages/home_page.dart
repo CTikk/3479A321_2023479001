@@ -8,6 +8,8 @@ import 'package:application_laboratorio/pages/list_content.dart';
 import 'package:application_laboratorio/pages/preference_page.dart';
 import 'package:application_laboratorio/provider/app_data.dart';
 import 'package:application_laboratorio/pages/activity_page.dart';
+import 'package:http/http.dart' as http;
+
 
 const String assetName = 'asset/icons/cara.svg';
 var logger = Logger();
@@ -22,6 +24,8 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   bool _resetAllowed = true;
+  String _imageUrl = 'https://picsum.photos/250?image=0';
+
 
   _MyHomePageState() {
     logger.i("Constructor ejecutado - mounted: \$mounted");
@@ -91,6 +95,31 @@ class _MyHomePageState extends State<MyHomePage> {
       );
     }
   }
+
+
+Future<void> _getNewImage() async {
+  final counter = context.read<AppData>().counter;
+  logger.i("Counter: $counter");
+  final String newImageUrl = 'https://picsum.photos/250?image=$counter';
+  logger.i("URL: $newImageUrl");
+  try {
+    final response = await http.head(Uri.parse(newImageUrl));
+    if (response.statusCode == 200) {
+      setState(() {
+        _imageUrl = newImageUrl;
+      });
+    } else {
+        setState(() {
+        _imageUrl = ''; // Clear the image URL
+        });
+    }
+  } catch (e) {
+    setState(() {
+      _imageUrl = ''; // Clear the image URL
+      });
+    }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -188,6 +217,20 @@ class _MyHomePageState extends State<MyHomePage> {
                       width: 40,
                       height: 40,
                     ),
+                    Image.network(
+                      _imageUrl.isNotEmpty ? _imageUrl : '',
+                      width: 250,
+                      height: 250,
+                      fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                        return Center(
+                          child: Text(
+                            'Failed to load image',
+                            style: TextStyle(color: Colors.red),
+                            ),
+                        );
+                      },
+                    ),
                   ],
                 ),
                 Row(
@@ -230,6 +273,10 @@ class _MyHomePageState extends State<MyHomePage> {
                     );
                   },
                   child: const Text('Ir a Lista'),
+                ),
+                ElevatedButton(
+                  onPressed: _getNewImage,
+                  child: const Text('Actualizar Imagen'),
                 ),
               ],
             ),
