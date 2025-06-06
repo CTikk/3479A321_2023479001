@@ -104,7 +104,7 @@ Future<void> _getNewImage() async {
   logger.i("URL: $newImageUrl");
   try {
     final response = await http.head(Uri.parse(newImageUrl));
-    if (response.statusCode == 200) {
+    if (response.statusCode == 200 || response.statusCode == 404) {
       setState(() {
         _imageUrl = newImageUrl;
       });
