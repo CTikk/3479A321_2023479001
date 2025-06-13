@@ -1,15 +1,21 @@
+
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:camera/camera.dart';
+import 'package:http/http.dart' as http;
+
 import 'package:application_laboratorio/pages/about.dart';
 import 'package:application_laboratorio/pages/list_content.dart';
 import 'package:application_laboratorio/pages/preference_page.dart';
-import 'package:application_laboratorio/provider/app_data.dart';
 import 'package:application_laboratorio/pages/activity_page.dart';
-import 'package:http/http.dart' as http;
-
+import 'package:application_laboratorio/pages/picture_screen.dart';
+import 'package:application_laboratorio/provider/app_data.dart';
+import 'package:application_laboratorio/pages/gallery_page.dart';
 
 const String assetName = 'asset/icons/cara.svg';
 var logger = Logger();
@@ -25,6 +31,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   bool _resetAllowed = true;
   String _imageUrl = 'https://picsum.photos/250?image=0';
+  List<File> _savedImages = [];
 
 
   _MyHomePageState() {
@@ -45,40 +52,43 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    logger.i("didChangeDependencies ejecutado");
+  Future<void> _getNewImage() async {
+    final counter = context.read<AppData>().counter;
+    final String newImageUrl = 'https://picsum.photos/250?image=$counter';
+    try {
+      final response = await http.head(Uri.parse(newImageUrl));
+      if (response.statusCode == 200 || response.statusCode == 404) {
+        setState(() {
+          _imageUrl = newImageUrl;
+        });
+      } else {
+        setState(() {
+          _imageUrl = '';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _imageUrl = '';
+      });
+    }
   }
 
-  @override
-  void setState(VoidCallback fn) {
-    super.setState(fn);
-    logger.i("setState ejecutado");
-  }
+  Future<String?> _takePicture() async {
+    try {
+      final cameras = await availableCameras();
+      final firstCamera = cameras.first;
 
-  @override
-  void didUpdateWidget(covariant MyHomePage oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    logger.i("didUpdateWidget ejecutado");
-  }
+      final result = await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => TakePictureScreen(camera: firstCamera),
+        ),
+      );
 
-  @override
-  void deactivate() {
-    super.deactivate();
-    logger.i("deactivate ejecutado");
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    logger.i("dispose ejecutado");
-  }
-
-  @override
-  void reassemble() {
-    super.reassemble();
-    logger.i("reassemble ejecutado (hot reload)");
+      return result as String?;
+    } catch (e) {
+      logger.e("Error al tomar la foto: $e");
+      return null;
+    }
   }
 
   void _navigateBasedOnCounter() {
@@ -96,30 +106,16 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-
-Future<void> _getNewImage() async {
-  final counter = context.read<AppData>().counter;
-  logger.i("Counter: $counter");
-  final String newImageUrl = 'https://picsum.photos/250?image=$counter';
-  logger.i("URL: $newImageUrl");
-  try {
-    final response = await http.head(Uri.parse(newImageUrl));
-    if (response.statusCode == 200 || response.statusCode == 404) {
-      setState(() {
-        _imageUrl = newImageUrl;
-      });
-    } else {
-        setState(() {
-        _imageUrl = ''; // Clear the image URL
-        });
-    }
-  } catch (e) {
-    setState(() {
-      _imageUrl = ''; // Clear the image URL
-      });
-    }
+  Future<void> _loadSavedImages() async {
+  final directory = await getApplicationDocumentsDirectory();
+  final files = directory.listSync();
+  setState(() {
+    _savedImages = files
+        .whereType<File>()
+        .where((f) => f.path.endsWith('.jpg') || f.path.endsWith('.png'))
+        .toList();
+  });
 }
-
 
   @override
   Widget build(BuildContext context) {
@@ -183,6 +179,19 @@ Future<void> _getNewImage() async {
                 );
               },
             ),
+            ListTile(
+              title: const Text('Galería'),
+              onTap: () async {
+                await _loadSavedImages();
+                if (!mounted) return;
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => GalleryPage(images: _savedImages),
+                  ),
+                );
+              },
+            ),
           ],
         ),
       ),
@@ -211,26 +220,31 @@ Future<void> _getNewImage() async {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
-                    SvgPicture.asset(
+                    /*SvgPicture.asset(
                       assetName,
                       semanticsLabel: 'cara',
                       width: 40,
                       height: 40,
-                    ),
-                    Image.network(
-                      _imageUrl.isNotEmpty ? _imageUrl : '',
-                      width: 250,
-                      height: 250,
-                      fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                        return Center(
-                          child: Text(
-                            'Failed to load image',
-                            style: TextStyle(color: Colors.red),
-                            ),
-                        );
-                      },
-                    ),
+                    ), */
+                    _imageUrl.startsWith('http')
+                        ? Image.network(
+                            _imageUrl,
+                            width: 250,
+                            height: 250,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return const Text('Error al cargar imagen');
+                            },
+                          )
+                        : Image.file(
+                            File(_imageUrl),
+                            width: 250,
+                            height: 250,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return const Text('Error al cargar imagen local');
+                            },
+                          ),
                   ],
                 ),
                 Row(
@@ -256,16 +270,16 @@ Future<void> _getNewImage() async {
                       tooltip: 'Incrementar',
                       onPressed: () => context.read<AppData>().incrementCounter(),
                     ),
-                    IconButton(
+                    /*IconButton(
                       icon: const Icon(Icons.navigate_next),
                       tooltip: 'Ir a nueva pantalla',
                       color: Colors.black,
                       onPressed: _navigateBasedOnCounter,
-                    ),
+                    ),*/
                   ],
                 ),
                 const SizedBox(height: 10),
-                ElevatedButton(
+                /*ElevatedButton(
                   onPressed: () {
                     Navigator.push(
                       context,
@@ -273,10 +287,21 @@ Future<void> _getNewImage() async {
                     );
                   },
                   child: const Text('Ir a Lista'),
-                ),
+                ),*/
                 ElevatedButton(
                   onPressed: _getNewImage,
-                  child: const Text('Actualizar Imagen'),
+                  child: const Text('Actualizar Imagen de Internet'),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    final imagePath = await _takePicture();
+                    if (imagePath != null && mounted) {
+                      setState(() {
+                        _imageUrl = imagePath;
+                      });
+                    }
+                  },
+                  child: const Text('Tomar Foto'),
                 ),
               ],
             ),
