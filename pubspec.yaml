@@ -47,7 +47,8 @@ dependencies:
   camera: ^0.11.1
   path_provider: ^2.1.5
   permission_handler: ^12.0.0+1
-
+  change_app_package_name: ^1.5.0
+  flutter_launcher_icons: ^0.14.4
 
 
 dev_dependencies:
@@ -60,6 +61,13 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
+
+flutter_launcher_icons: 
+  android: "ic_launcher" # Generar iconos para Android o reemplaza el vigente
+  ios: false # Solo para Android
+  image_path: "asset/icons/icono_1024_1024.png" # Ruta a tu archivo de icono PNG / También debe ser incorporado en el asset previamente.
+  min_sdk_android: 21 # Mínimo SDK de Android soportado
+  
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

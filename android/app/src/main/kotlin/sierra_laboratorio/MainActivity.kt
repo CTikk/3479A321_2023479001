@@ -1,4 +1,4 @@
-package com.example.application_laboratorio
+package sierra_laboratorio
 
 import io.flutter.embedding.android.FlutterActivity
 
